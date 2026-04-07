@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PriorArt-Retriever — AI Prior Art Search | PatentWatch.ai</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --pa-orange: #f97316;
+            --pa-rose: #e11d48;
+            --pa-violet: #7c3aed;
+            --pa-emerald: #10b981;
+            --pa-sky: #0ea5e9;
+            --pa-gradient: linear-gradient(135deg, #f97316 0%, #e11d48 50%, #7c3aed 100%);
+            --bg: #09090b;
+            --bg-card: #18181b;
+            --bg-el: #27272a;
+            --text: #fafafa;
+            --text-dim: #a1a1aa;
+            --text-muted: #52525b;
+            --border: #3f3f46;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;
+            background-image:radial-gradient(ellipse at 10% 90%,rgba(249,115,22,0.07),transparent 50%),radial-gradient(ellipse at 90% 10%,rgba(124,58,237,0.06),transparent 50%);}
+        .hdr{background:rgba(24,24,27,0.8);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);padding:0.6rem 2rem;position:sticky;top:0;z-index:100}
+        .hdr-in{max-width:1800px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
+        .logo{display:flex;align-items:center;gap:0.7rem}
+        .logo-m{width:42px;height:42px;background:var(--pa-gradient);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.2rem;box-shadow:0 0 18px rgba(249,115,22,0.35)}
+        .logo-n{font-size:1.3rem;font-weight:900;background:var(--pa-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .logo-t{font-size:0.52rem;color:var(--text-dim);text-transform:uppercase;letter-spacing:3px}
+        .bds{display:flex;gap:0.3rem}
+        .bd{background:var(--bg-card);border:1px solid var(--border);padding:0.28rem 0.6rem;border-radius:5px;font-size:0.58rem;color:var(--text-dim);font-family:'IBM Plex Mono',monospace}
+        .bd.on{background:rgba(16,185,129,0.12);border-color:var(--pa-emerald);color:var(--pa-emerald)}
+        .bd.on::before{content:'';display:inline-block;width:5px;height:5px;background:var(--pa-emerald);border-radius:50%;margin-right:4px;animation:p 1.5s infinite}
+        @keyframes p{0%,100%{opacity:1}50%{opacity:.4}}
+
+        .main{max-width:1800px;margin:0 auto;padding:1.5rem 2rem}
+        .hero{text-align:center;margin-bottom:1.2rem}
+        .hero h1{font-size:2rem;font-weight:900;background:var(--pa-gradient);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:0.3rem}
+        .hero p{color:var(--text-dim);font-size:0.9rem}
+
+        .ws{display:grid;grid-template-columns:1fr 380px;gap:1.2rem}
+        @media(max-width:1300px){.ws{grid-template-columns:1fr}}
+        .card{background:var(--bg-card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+        .ch{padding:0.8rem 1.1rem;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,rgba(63,63,70,0.2),transparent)}
+        .ch h3{font-size:0.82rem;font-weight:700;display:flex;align-items:center;gap:0.45rem}
+        .cb{padding:1.1rem}
+
+        .search-box{display:flex;gap:0.5rem;margin-bottom:1rem}
+        .search-input{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:0.8rem 1rem;color:var(--text);font-family:'Outfit',sans-serif;font-size:0.85rem}
+        .search-input:focus{outline:none;border-color:var(--pa-orange)}
+        .search-btn{padding:0.8rem 1.5rem;background:var(--pa-gradient);border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer;font-family:'Outfit',sans-serif;font-size:0.85rem;transition:all .3s;white-space:nowrap}
+        .search-btn:hover{box-shadow:0 6px 25px rgba(249,115,22,0.35);transform:translateY(-1px)}
+        .search-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+        .filters{display:flex;gap:0.4rem;margin-bottom:1rem;flex-wrap:wrap}
+        .filter{padding:0.35rem 0.7rem;background:var(--bg-el);border:1px solid var(--border);border-radius:6px;font-size:0.68rem;color:var(--text-dim);cursor:pointer;transition:all .2s}
+        .filter.active{border-color:var(--pa-orange);color:var(--pa-orange);background:rgba(249,115,22,0.1)}
+        .filter:hover{border-color:var(--pa-orange)}
+
+        .results{display:flex;flex-direction:column;gap:0.6rem}
+        .result-card{background:var(--bg-el);border:1px solid var(--border);border-radius:12px;padding:1rem;transition:all .3s;animation:slideUp .4s ease;cursor:pointer}
+        .result-card:hover{border-color:var(--pa-orange);transform:translateX(4px)}
+        @keyframes slideUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+        .rc-top{display:flex;justify-content:space-between;align-items:start;margin-bottom:0.5rem}
+        .rc-type{font-size:0.55rem;text-transform:uppercase;letter-spacing:1.5px;padding:0.2rem 0.5rem;border-radius:4px;font-weight:600}
+        .rc-type.patent{background:rgba(14,165,233,0.15);color:var(--pa-sky)}
+        .rc-type.paper{background:rgba(124,58,237,0.15);color:var(--pa-violet)}
+        .rc-type.product{background:rgba(249,115,22,0.15);color:var(--pa-orange)}
+        .rc-score{font-family:'IBM Plex Mono',monospace;font-weight:700;font-size:0.9rem}
+        .rc-score.high{color:var(--pa-rose)}
+        .rc-score.med{color:var(--pa-orange)}
+        .rc-score.low{color:var(--pa-emerald)}
+        .rc-title{font-size:0.85rem;font-weight:700;margin-bottom:0.3rem}
+        .rc-meta{font-size:0.65rem;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;margin-bottom:0.4rem}
+        .rc-excerpt{font-size:0.72rem;color:var(--text-dim);line-height:1.5}
+        .rc-tags{display:flex;gap:0.3rem;margin-top:0.5rem;flex-wrap:wrap}
+        .rc-tag{font-size:0.55rem;padding:0.15rem 0.4rem;background:var(--bg);border-radius:3px;color:var(--text-muted)}
+
+        /* Relevance bars */
+        .rel-bar{display:flex;align-items:center;gap:0.4rem;margin-top:0.4rem}
+        .rel-track{flex:1;height:4px;background:var(--bg);border-radius:2px;overflow:hidden}
+        .rel-fill{height:100%;border-radius:2px;transition:width .8s}
+        .rel-label{font-size:0.6rem;color:var(--text-muted);min-width:55px}
+
+        /* Sidebar */
+        .side{display:flex;flex-direction:column;gap:1rem}
+
+        /* Stats */
+        .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.5rem}
+        .stat{background:var(--bg);border-radius:8px;padding:0.7rem;text-align:center}
+        .stat-v{font-size:1.3rem;font-weight:800;font-family:'IBM Plex Mono',monospace;color:var(--pa-orange)}
+        .stat-l{font-size:0.55rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+
+        /* Corpus */
+        .corpus-bars{display:flex;flex-direction:column;gap:0.4rem}
+        .corpus-row{display:flex;align-items:center;gap:0.5rem}
+        .corpus-label{font-size:0.68rem;min-width:80px;color:var(--text-dim)}
+        .corpus-track{flex:1;height:10px;background:var(--bg);border-radius:5px;overflow:hidden}
+        .corpus-fill{height:100%;border-radius:5px;transition:width 1s}
+        .corpus-val{font-size:0.65rem;font-family:'IBM Plex Mono',monospace;color:var(--text-muted);min-width:40px;text-align:right}
+
+        /* Pipeline */
+        .pipe{display:flex;flex-direction:column;gap:0.35rem}
+        .ps{display:flex;align-items:center;gap:0.5rem;padding:0.5rem 0.65rem;background:var(--bg-el);border-radius:7px;border-left:3px solid var(--border);transition:all .3s}
+        .ps.run{border-left-color:var(--pa-orange);background:rgba(249,115,22,0.06)}
+        .ps.ok{border-left-color:var(--pa-emerald)}
+        .ps .ic{font-size:.9rem;width:24px;text-align:center}
+        .ps .lb{font-size:.7rem;font-weight:600;flex:1}
+        .ps .st{font-size:.55rem;font-family:'IBM Plex Mono',monospace;color:var(--text-muted)}
+        .ps.ok .st{color:var(--pa-emerald)}
+
+        .overlay{position:fixed;inset:0;background:rgba(9,9,11,0.96);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:1000}
+        .overlay.show{display:flex}
+        .orbs{position:relative;width:80px;height:80px;margin-bottom:1.5rem}
+        .orb{position:absolute;width:20px;height:20px;border-radius:50%;animation:orbit 1.5s linear infinite}
+        .orb:nth-child(1){background:var(--pa-orange);animation-delay:0s}
+        .orb:nth-child(2){background:var(--pa-rose);animation-delay:.5s}
+        .orb:nth-child(3){background:var(--pa-violet);animation-delay:1s}
+        @keyframes orbit{0%{top:0;left:30px}25%{top:30px;left:60px}50%{top:60px;left:30px}75%{top:30px;left:0}100%{top:0;left:30px}}
+        .ov-t{font-size:1rem;font-weight:700;margin-bottom:.3rem}
+        .ov-s{font-size:.78rem;color:var(--text-muted);font-family:'IBM Plex Mono',monospace;margin-bottom:1rem}
+        .pbar{width:240px;height:4px;background:var(--bg-el);border-radius:2px;overflow:hidden}
+        .pfill{height:100%;background:var(--pa-gradient);width:0%;transition:width .3s}
+
+        .toast{position:fixed;bottom:1.5rem;right:1.5rem;background:var(--bg-card);border:1px solid var(--border);border-radius:10px;padding:.7rem 1rem;display:flex;align-items:center;gap:.5rem;box-shadow:0 10px 35px rgba(0,0,0,.5);transform:translateY(80px);opacity:0;transition:all .4s;z-index:1000}
+        .toast.show{transform:translateY(0);opacity:1}
+        ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+    </style>
+</head>
+<body>
+<header class="hdr"><div class="hdr-in">
+    <div class="logo"><div class="logo-m">🔬</div><div><div class="logo-n">PriorArt-Retriever</div><div class="logo-t">PatentWatch.ai • Invalidity Search</div></div></div>
+    <div class="bds"><span class="bd on">Index Ready</span><span class="bd">Dense Retrieval</span><span class="bd">BM25 + SBERT</span><span class="bd">160M+ Docs</span></div>
+</div></header>
+
+<main class="main">
+<div class="hero"><h1>🔬 AI-Powered Prior Art Discovery</h1><p>Find patents, papers & products that predate any claim — dense retrieval with re-ranking</p></div>
+<div class="ws">
+    <div class="card">
+        <div class="ch"><h3>🔍 Prior Art Search</h3><span style="font-size:.63rem;color:var(--text-muted);font-family:'IBM Plex Mono'">RAG Pipeline v2</span></div>
+        <div class="cb">
+            <div class="search-box">
+                <input class="search-input" id="searchInput" value="Wireless charging module with multi-coil transmitter array and thermal management" placeholder="Enter patent claim or concept...">
+                <button class="search-btn" id="searchBtn" onclick="runSearch()">🔍 Search</button>
+            </div>
+            <div class="filters">
+                <div class="filter active" onclick="this.classList.toggle('active')">📄 Patents</div>
+                <div class="filter active" onclick="this.classList.toggle('active')">📑 Papers</div>
+                <div class="filter active" onclick="this.classList.toggle('active')">📦 Products</div>
+                <div class="filter" onclick="this.classList.toggle('active')">Pre-2015</div>
+                <div class="filter" onclick="this.classList.toggle('active')">US Only</div>
+                <div class="filter" onclick="this.classList.toggle('active')">IPC: H02J</div>
+            </div>
+            <div class="results" id="results"><div style="color:var(--text-muted);font-size:.8rem;text-align:center;padding:2rem">Enter a claim to search for prior art</div></div>
+        </div>
+    </div>
+    <div class="side">
+        <div class="card"><div class="ch"><h3>📊 Search Stats</h3></div><div class="cb">
+            <div class="stat-grid">
+                <div class="stat"><div class="stat-v" id="sHits">—</div><div class="stat-l">Results</div></div>
+                <div class="stat"><div class="stat-v" id="sTime">—</div><div class="stat-l">Latency (ms)</div></div>
+                <div class="stat"><div class="stat-v" id="sScanned">—</div><div class="stat-l">Docs Scanned</div></div>
+                <div class="stat"><div class="stat-v" id="sReranked">—</div><div class="stat-l">Re-ranked</div></div>
+            </div>
+        </div></div>
+        <div class="card"><div class="ch"><h3>📚 Corpus Coverage</h3></div><div class="cb">
+            <div class="corpus-bars" id="corpusBars">
+                <div class="corpus-row"><span class="corpus-label">USPTO</span><div class="corpus-track"><div class="corpus-fill" style="width:85%;background:var(--pa-sky)"></div></div><span class="corpus-val">92M</span></div>
+                <div class="corpus-row"><span class="corpus-label">EPO</span><div class="corpus-track"><div class="corpus-fill" style="width:55%;background:var(--pa-violet)"></div></div><span class="corpus-val">38M</span></div>
+                <div class="corpus-row"><span class="corpus-label">WIPO</span><div class="corpus-track"><div class="corpus-fill" style="width:30%;background:var(--pa-orange)"></div></div><span class="corpus-val">22M</span></div>
+                <div class="corpus-row"><span class="corpus-label">Papers</span><div class="corpus-track"><div class="corpus-fill" style="width:15%;background:var(--pa-rose)"></div></div><span class="corpus-val">8M</span></div>
+            </div>
+        </div></div>
+        <div class="card"><div class="ch"><h3>⚙️ Retrieval Pipeline</h3></div><div class="cb">
+            <div class="pipe" id="pipe">
+                <div class="ps" id="p0"><span class="ic">🔤</span><span class="lb">Query Encoding</span><span class="st">waiting</span></div>
+                <div class="ps" id="p1"><span class="ic">📡</span><span class="lb">BM25 Sparse Retrieval</span><span class="st">waiting</span></div>
+                <div class="ps" id="p2"><span class="ic">🧠</span><span class="lb">Dense ANN Search</span><span class="st">waiting</span></div>
+                <div class="ps" id="p3"><span class="ic">🔀</span><span class="lb">Hybrid Fusion (RRF)</span><span class="st">waiting</span></div>
+                <div class="ps" id="p4"><span class="ic">🏆</span><span class="lb">Cross-Encoder Re-rank</span><span class="st">waiting</span></div>
+            </div>
+        </div></div>
+    </div>
+</div>
+</main>
+
+<div class="overlay" id="overlay"><div class="orbs"><div class="orb"></div><div class="orb"></div><div class="orb"></div></div><div class="ov-t">Searching Prior Art...</div><div class="ov-s" id="ovSub">Encoding query...</div><div class="pbar"><div class="pfill" id="pFill"></div></div></div>
+<div class="toast" id="toast"><span id="ti">✅</span><div><div style="font-size:.78rem;font-weight:600" id="tt"></div><div style="font-size:.6rem;color:var(--text-muted)" id="tm"></div></div></div>
+
+<script>
+const priorArtResults = [
+    {type:'patent',title:'Wireless Power Transfer with Multi-Coil Transmitter',id:'US9876543B1',date:'2013-08-14',score:96,excerpt:'A multi-coil wireless power transmitter comprising an array of overlapping coils for extended spatial freedom charging, with integrated thermal regulation.',tags:['H02J 50/12','wireless charging','multi-coil']},
+    {type:'paper',title:'Thermal Management in Inductive Charging Systems',id:'IEEE TPEL Vol.28 No.7',date:'2012-03-22',score:91,excerpt:'Analysis of thermal dissipation techniques in high-power inductive charging modules including on-die sensing and active throttling mechanisms.',tags:['thermal','inductive','power electronics']},
+    {type:'patent',title:'Qi-Compatible Charging Pad with Frequency Hopping',id:'EP3145678A1',date:'2014-11-03',score:87,excerpt:'A Qi-standard compliant wireless charging apparatus operating across 80-300kHz band with adaptive frequency selection based on coupling coefficient.',tags:['H02J 7/02','Qi','frequency']},
+    {type:'product',title:'PowerMax WC-200 Wireless Charging Module',id:'Product Launch: CES 2014',date:'2014-01-07',score:82,excerpt:'Commercial charging module featuring triple-coil design with PMU-controlled power delivery and thermal shutdown protection at 50°C threshold.',tags:['commercial','triple-coil','PMU']},
+    {type:'patent',title:'Closed-Loop Power Control for Wireless Chargers',id:'US10234567B2',date:'2011-06-19',score:78,excerpt:'Method and apparatus for regulating wireless power output using real-time receiver feedback via in-band communication channel.',tags:['H02J 50/80','feedback','regulation']},
+    {type:'paper',title:'Survey of Resonant Inductive Coupling Standards',id:'ACM Computing Surveys 2013',date:'2013-09-01',score:74,excerpt:'Comprehensive review of Qi, PMA, and A4WP standards covering operating frequencies, coil geometries, and interoperability requirements.',tags:['survey','standards','Qi','PMA']},
+];
+
+function setP(i,s){const e=document.getElementById('p'+i);e.className='ps '+s;e.querySelector('.st').textContent=s==='run'?'running...':s==='ok'?'✓ done':'waiting';}
+function toast(i,t,m){const e=document.getElementById('toast');document.getElementById('ti').textContent=i;document.getElementById('tt').textContent=t;document.getElementById('tm').textContent=m;e.classList.add('show');setTimeout(()=>e.classList.remove('show'),3000);}
+
+async function runSearch(){
+    const btn=document.getElementById('searchBtn');btn.disabled=true;
+    const ov=document.getElementById('overlay');ov.classList.add('show');
+    const bar=document.getElementById('pFill'),sub=document.getElementById('ovSub');
+    const stages=['Encoding query...','Running BM25 retrieval...','Dense ANN search (HNSW)...','Fusing results (RRF)...','Cross-encoder re-ranking...','Done'];
+    let p=0,si=0;
+    await new Promise(r=>{const iv=setInterval(()=>{p+=Math.random()*16+7;if(p>100)p=100;bar.style.width=p+'%';const ns=Math.floor(p/100*stages.length);if(ns!==si&&ns<stages.length){si=ns;sub.textContent=stages[si];}if(p>=100){clearInterval(iv);setTimeout(r,200);}},65);});
+    ov.classList.remove('show');
+
+    for(let i=0;i<5;i++)setP(i,'');
+    const delays=[300,500,600,400,500];
+    for(let i=0;i<5;i++){setP(i,'run');await new Promise(r=>setTimeout(r,delays[i]));setP(i,'ok');}
+
+    document.getElementById('sHits').textContent=priorArtResults.length;
+    document.getElementById('sTime').textContent=Math.floor(180+Math.random()*120);
+    document.getElementById('sScanned').textContent='2.4M';
+    document.getElementById('sReranked').textContent='128';
+
+    const container=document.getElementById('results');container.innerHTML='';
+    for(let i=0;i<priorArtResults.length;i++){
+        const r=priorArtResults[i];
+        const cls=r.score>=90?'high':r.score>=75?'med':'low';
+        const color=r.score>=90?'var(--pa-rose)':r.score>=75?'var(--pa-orange)':'var(--pa-emerald)';
+        const div=document.createElement('div');div.className='result-card';div.style.animationDelay=i*0.1+'s';
+        div.innerHTML=`
+            <div class="rc-top"><span class="rc-type ${r.type}">${r.type}</span><span class="rc-score ${cls}">${r.score}%</span></div>
+            <div class="rc-title">${r.title}</div>
+            <div class="rc-meta">${r.id} • ${r.date}</div>
+            <div class="rc-excerpt">${r.excerpt}</div>
+            <div class="rel-bar"><span class="rel-label">Relevance</span><div class="rel-track"><div class="rel-fill" style="width:${r.score}%;background:${color}"></div></div></div>
+            <div class="rc-tags">${r.tags.map(t=>`<span class="rc-tag">${t}</span>`).join('')}</div>
+        `;
+        container.appendChild(div);
+        await new Promise(re=>setTimeout(re,200));
+    }
+    toast('✅','Search Complete',`${priorArtResults.length} prior art references found`);
+    btn.disabled=false;
+}
+</script>
+</body>
+</html>
